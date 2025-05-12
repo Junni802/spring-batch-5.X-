@@ -18,15 +18,19 @@ public class JobConfiguration {
 
   private final PlatformTransactionManager transactionManager;
   private final JobRepository jobRepository;
+  int size = 0;
+  int chunk = 1;
 
   @Bean
-  public Job exampleJob(Step step1, Step step2) {
+  public Job exampleJob(Step step1, Step step2, Step step3) {
     return new JobBuilder("exampleJob", jobRepository)
         .start(step1)
         .next(step2)
+        .next(step3) // 여기에 포함시키면 실행됨!
         .build();
   }
 
+  // task 기반 step 사용한 메서드
   @Bean
   @JobScope
   public Step step1() {
@@ -37,6 +41,7 @@ public class JobConfiguration {
         }, transactionManager).build();
   }
 
+  // task 기반 step 사용한 메서드
   @Bean
   @JobScope
   public Step step2() {
@@ -45,6 +50,29 @@ public class JobConfiguration {
           System.out.println("hello step2");
           return RepeatStatus.FINISHED;
         }, transactionManager).build();
+  }
+
+  // chunk 기반 step 사용
+  @Bean
+  @JobScope
+  public Step step3() {
+    return new StepBuilder("step1", jobRepository)
+        .chunk(10, transactionManager)
+        .reader(() -> {
+          if (size == 11) {
+            return null;
+          }
+          System.out.println("reader : " + size);
+          return size++;
+        })
+        .processor(item -> {
+          System.out.println("processor : " + item);
+          return item;
+        })
+        .writer(it -> {
+          System.out.println("writer : " + (chunk++) + "번째 chunk : " + it.getItems());
+        })
+        .build();
   }
 
 }

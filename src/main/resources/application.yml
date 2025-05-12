@@ -12,7 +12,7 @@ spring:
   jpa:
     open-in-view: true
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
     properties:
       hibernate:
@@ -21,6 +21,6 @@ spring:
 
   batch:
     jdbc:
-      initialize-schema: always
+      initialize-schema: never
     job:
       enabled: true # Job ??? ?????? ???? ??? ??
